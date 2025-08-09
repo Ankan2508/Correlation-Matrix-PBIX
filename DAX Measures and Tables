@@ -1,0 +1,48 @@
+
+
+Metrics = DATATABLE(
+    "MetricName", STRING,
+    "MetricLabel", STRING,
+    {
+        {"Engagement", "Engagement"},
+        {"Views", "Views"}, 
+        {"CTR", "Click Rate"},
+        {"Impressions", "Impressions"},
+        {"VideoViews", "Video Views"},
+        {"EngagementRate", "Eng. Rate"},
+        {"Likes", "Likes"},
+        {"Shares", "Shares"},
+        {"Comments", "Comments"}
+    }
+)
+
+Correlation_Base = 
+VAR RowMetric = SELECTEDVALUE(Metrics[MetricName])
+VAR ColMetric = SELECTEDVALUE('Metrics (2)'[MetricName])
+VAR DataTable_ =
+    ADDCOLUMNS (
+        FILTER ( Posts, NOT ( ISBLANK ( Posts[Post_ID] ) ) ),
+        "Value_X",
+            SWITCH (
+                RowMetric,
+                "Engagement", Posts[Engagement],
+                "Views", Posts[Views],
+                "CTR", Posts[Click_Through_Rate],
+                -- Additional mappings...
+                BLANK()
+            ),
+        "Value_Y",
+            SWITCH (
+                ColMetric,
+                "Engagement", Posts[Engagement],
+                "Views", Posts[Views],
+                -- Mirror logic for Y-axis...
+                BLANK()
+            )
+    )
+-- Pearson correlation formula implementation
+VAR n = COUNTROWS(FilteredData)
+VAR Numerator = (n * SumXY) - (SumX_ * SumY)
+VAR Denominator = SQRT(DenominatorX * DenominatorY)
+VAR Result = IF(Denominator = 0 || n < 2, BLANK(), Numerator / Denominator)
+RETURN IF(RowMetric = ColMetric, 1.00, Result)
